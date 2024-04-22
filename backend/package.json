@@ -1,0 +1,17 @@
+{
+    "name": "backend",
+    "version": "1.0.0",
+    "description": "Project 7 - developpement backend",
+    "main": "server.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "Alexis MATTHEY-VINTAR",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^4.19.2",
+        "mongodb": "^6.5.0",
+        "mongoose": "^8.3.2",
+        "nodemon": "^3.1.0"
+    }
+}
