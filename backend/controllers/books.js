@@ -1,12 +1,12 @@
-const multer = require("multer");
-const sharp = require("sharp");
-const fs = require("fs");
-const Book = require("../models/Book");
+const multer = require('multer');
+const sharp = require('sharp');
+const fs = require('fs');
+const Book = require('../models/Book');
 
 exports.postBook = (req, res) => {
     console.log(req.body);
     if (!req.body.book || !req.body.image) {
-        return res.status(400).json({ message: "Must have book and image" });
+        return res.status(400).json({ message: 'Must have book and image' });
     }
 
     const inputBook = JSON.parse(req.body.book);
@@ -28,7 +28,7 @@ exports.postBook = (req, res) => {
     // await sharp(buffer)
     //     .webp({ quality: 20 })
     //     .toFile("./images/" + ref);
-    const link = "http://127.0.0.1:4000/images/ + ref";
+    const link = 'http://127.0.0.1:4000/images/ + ref';
 
     const book = new Book({
         userId: inputBook.userId,
@@ -59,13 +59,13 @@ exports.getBooks = async (req, res, next) => {
     const books = await Book.find();
     console.log(books);
 
-    if (!books) return res.status(404).json({ message: "No books found" });
+    if (!books) return res.status(404).json({ message: 'No books found' });
 
     res.status(200).json(books);
 };
 
 exports.createBook = (req, res) => {
-    console.log("createBook");
+    console.log('createBook');
     // const book = JSON.parse(req.body.bodyFormData);
     console.log(req.body);
 };
