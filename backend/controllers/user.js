@@ -1,10 +1,10 @@
-const User = require("../models/User");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const emailValidator = require("email-validator");
-const passwordValidator = require("password-validator");
+const User = require('../models/User');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const emailValidator = require('email-validator');
+const passwordValidator = require('password-validator');
 
-require("dotenv").config();
+require('dotenv').config();
 
 const passwordSchema = new passwordValidator();
 passwordSchema
@@ -23,7 +23,7 @@ passwordSchema
     .spaces() // Should not have spaces
     .is()
     .not()
-    .oneOf(["Passw0rd", "Password123", "User123"]); // Blacklist these values
+    .oneOf(['Passw0rd', 'Password123', 'User123']); // Blacklist these values
 
 exports.signup = async (req, res, next) => {
     const email = req.body.email;
@@ -31,7 +31,7 @@ exports.signup = async (req, res, next) => {
 
     if (!passwordSchema.validate(password) || !emailValidator.validate(email)) {
         return res.status(401).json({
-            message: "Please input a valid email and/or password.",
+            message: 'Please input a valid email and/or password.',
         });
     }
 
@@ -43,7 +43,7 @@ exports.signup = async (req, res, next) => {
         user.save()
             .then(() =>
                 res.status(201).json({
-                    message: "User added successfully",
+                    message: 'User added successfully',
                 })
             )
             .catch((error) => res.status(400).json({ error }));
@@ -53,7 +53,7 @@ exports.signup = async (req, res, next) => {
 exports.login = async (req, res, next) => {
     if (!req.body.email || !req.body.password) {
         return res.status(400).json({
-            message: "Must have email and password",
+            message: 'Must have email and password',
         });
     }
 
@@ -75,7 +75,7 @@ exports.login = async (req, res, next) => {
                     { userId: user._id },
                     process.env.JWT_ENCRYPT,
                     {
-                        expiresIn: "24h",
+                        expiresIn: '24h',
                     }
                 );
 
@@ -85,7 +85,7 @@ exports.login = async (req, res, next) => {
                 });
             } else {
                 return res.status(401).json({
-                    error: "Wrong password",
+                    error: 'Wrong password',
                 });
             }
         })

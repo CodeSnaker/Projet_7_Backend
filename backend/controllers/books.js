@@ -1,71 +1,51 @@
-const multer = require('multer');
 const sharp = require('sharp');
-const fs = require('fs');
 const Book = require('../models/Book');
 
-exports.postBook = (req, res) => {
-    console.log(req.body);
-    if (!req.body.book || !req.body.image) {
+exports.postBook = async (req, res) => {
+    if (!req.body.book || !req.file.fieldname === 'image') {
         return res.status(400).json({ message: 'Must have book and image' });
     }
 
     const inputBook = JSON.parse(req.body.book);
+    delete inputBook._id;
+    delete inputBook.userId;
 
-    // const { buffer, fileName } = req.body.image;
-    // console.log(fileName);
-    // console.log(inputBook);
-    // const storage = multer.memoryStorage();
-    // const covers = multer({ storage });
-
-    // fs.access("./images", (error) => {
-    //     if (error) {
-    //         fs.mkdirSync("./images");
-    //     }
-    // });
-
-    // const timestamp = new Date().toISOString();
-    // const ref = fileName + "-" + timestamp + ".webp";
-    // await sharp(buffer)
-    //     .webp({ quality: 20 })
-    //     .toFile("./images/" + ref);
-    const link = 'http://127.0.0.1:4000/images/ + ref';
+    const imageUrl =
+        req.protocol + '://' + req.get('host') + '/images/' + req.file.filename;
 
     const book = new Book({
-        userId: inputBook.userId,
-        title: inputBook.title,
-        author: inputBook.author,
-        imageUrl: link,
-        year: inputBook.year,
-        genre: inputBook.genre,
-        ratings: inputBook.ratings,
-        averageRating: inputBook.averageRating,
+        ...inputBook,
+        userId: req.auth.userId,
+        imageUrl,
     });
 
-    // book.save()
-    // .then(() => res.status(201).json({ message: "Book has been created" }))
-    // .catch((error) =>
-    //     res.status(500).json({ message: "Something went wrong" })
-    // );
+    book.save()
+        .then(() => res.status(201).json({ message: 'Book has been created' }))
+        .catch((error) =>
+            res.status(500).json({ message: 'Something went wrong' })
+        );
 };
 
-exports.getBooks = async (req, res, next) => {
-    // Book.find({})
-    //     .then((books) => {
-    //         console.log(books);
-    //         res.status(200).json(books);
-    //     })
-    //     .catch((error) => res.status(404).json({ error: error }));
-
-    const books = await Book.find();
-    console.log(books);
-
-    if (!books) return res.status(404).json({ message: 'No books found' });
-
-    res.status(200).json(books);
+exports.getBooks = async (req, res) => {
+    await Book.find()
+        .then((books) => res.status(200).json(books))
+        .catch((err) => res.status(404).json({ message: 'Books not found' }));
 };
 
-exports.createBook = (req, res) => {
-    console.log('createBook');
-    // const book = JSON.parse(req.body.bodyFormData);
-    console.log(req.body);
+exports.getBook = async (req, res) => {
+    await Book.findOne({ _id: req.params.id })
+        .then((book) => res.status(200).json(book))
+        .catch((err) => res.status(404).json({ message: 'Book not found' }));
+};
+
+exports.getBestRated = async (req, res) => {
+    console.log('BestRated');
+    await Book.find()
+        .limit(3)
+        .sort({ averageRating: -1 })
+        .then((books) => {
+            console.log(books);
+            res.status(200).json(books);
+        })
+        .catch((err) => res.status(404).json({ message: 'Books not found' }));
 };

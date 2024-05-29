@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "email-validator": "^2.0.4",
-    "mongoose-unique-validator": "^5.0.0",
-    "password-validator": "^5.3.0"
-  }
-}
