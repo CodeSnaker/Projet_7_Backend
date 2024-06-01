@@ -1,5 +1,6 @@
 const sharp = require('sharp');
 const Book = require('../models/Book');
+const fs = require('fs');
 
 exports.postBook = async (req, res) => {
     if (!req.body.book || !req.file.fieldname === 'image') {
@@ -39,13 +40,45 @@ exports.getBook = async (req, res) => {
 };
 
 exports.getBestRated = async (req, res) => {
-    console.log('BestRated');
     await Book.find()
         .limit(3)
         .sort({ averageRating: -1 })
-        .then((books) => {
-            console.log(books);
-            res.status(200).json(books);
-        })
+        .then((books) => res.status(200).json(books))
         .catch((err) => res.status(404).json({ message: 'Books not found' }));
+};
+
+exports.deleteBook = async (req, res) => {
+    const book = await Book.findById(req.params.id);
+
+    if (!book) {
+        return res.status(400).json({ message: 'book does not exist' });
+    } else if (req.auth.userId !== book.userId) {
+        return res.status(403).json({
+            message: 'This user is not authorized to delete this book',
+        });
+    }
+
+    const fileName = book.imageUrl.split('/').pop();
+
+    fs.unlink('./images/' + fileName, (err) => {
+        if (err) return res.status(500).json({ err });
+
+        Book.deleteOne({ _id: req.params.id })
+            .then(() => res.status(200).json({ message: 'book was deleted' }))
+            .catch((err) => res.status(400).json({ err }));
+    });
+};
+
+exports.updateBook = async (req, res) => {
+    const book = await Book.findById(req.params.id);
+
+    if (!book) {
+        return res.status(400).json({ message: 'book does not exist' });
+    } else if (req.auth.userId !== book.userId) {
+        return res.status(403).json({
+            message: 'This user is not authorized to modify this book',
+        });
+    }
+
+    const fileName = book.imageUrl.split('/').pop();
 };
