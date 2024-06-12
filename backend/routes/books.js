@@ -11,15 +11,9 @@ router.get('/bestrating', bookController.getBestRated);
 
 router.get('/:id', bookController.getBook);
 
-router.post(
-    '/',
-    auth,
-    multer.uploadImage,
-    multer.compressAndSaveImage,
-    bookController.postBook
-);
+router.post('/', auth, multer, multer.optimizeImage, bookController.postBook);
 
-router.delete('/:id', auth, multer.uploadImage, bookController.deleteBook);
+router.delete('/:id', auth, multer, bookController.deleteBook);
 
 // router.put("/:id", auth, multer.uploadImage, multer.compressAndSaveImage, );
 

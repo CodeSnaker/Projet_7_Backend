@@ -1,6 +1,6 @@
-const sharp = require('sharp');
 const Book = require('../models/Book');
 const fs = require('fs');
+const path = require('path');
 
 exports.postBook = async (req, res) => {
     if (!req.body.book || !req.file.fieldname === 'image') {
@@ -11,14 +11,19 @@ exports.postBook = async (req, res) => {
     delete inputBook._id;
     delete inputBook.userId;
 
-    const imageUrl =
-        req.protocol + '://' + req.get('host') + '/images/' + req.file.filename;
-
     const book = new Book({
         ...inputBook,
         userId: req.auth.userId,
-        imageUrl,
+        imageUrl:
+            req.protocol +
+            '://' +
+            req.get('host') +
+            '/images/' +
+            'optimized_' +
+            req.file.filename,
     });
+
+    console.log(book.imageUrl);
 
     book.save()
         .then(() => res.status(201).json({ message: 'Book has been created' }))
@@ -70,7 +75,7 @@ exports.deleteBook = async (req, res) => {
 };
 
 exports.updateBook = async (req, res) => {
-    const book = await Book.findById(req.params.id);
+    let book = await Book.findById(req.params.id);
 
     if (!book) {
         return res.status(400).json({ message: 'book does not exist' });
@@ -78,6 +83,11 @@ exports.updateBook = async (req, res) => {
         return res.status(403).json({
             message: 'This user is not authorized to modify this book',
         });
+    }
+
+    if (req.body.hasOwnProperty('book')) {
+        // parse JSON, replace image, update book
+        console.log('AYO');
     }
 
     const fileName = book.imageUrl.split('/').pop();
