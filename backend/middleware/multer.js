@@ -35,6 +35,7 @@ module.exports.optimizeImage = async (req, res, next) => {
     const outputFile = path.join('images', 'optimized_' + fileName);
     console.log(outputFile);
     let isResized = false;
+    sharp.cache(false);
     await sharp(filePath)
         .resize({
             width: 405,
@@ -42,22 +43,17 @@ module.exports.optimizeImage = async (req, res, next) => {
         })
         .toFile(outputFile)
         .then(() => {
-            console.log('sharp then');
-            isResized = true;
-        });
-    console.log(isResized);
-    if (isResized) {
-        fs.unlink(pathOldFile, (err) => {
-            console.log(err);
+            fs.unlink(pathOldFile, (err) => {
+                console.log(err);
 
-            if (!err) {
-                req.file.path = outputFile;
-                next();
-            } else {
-                return res.status(500).json({ err });
-            }
+                if (!err) {
+                    req.file.path = outputFile;
+                    next();
+                } else {
+                    return res.status(500).json({ err });
+                }
+            });
         });
-    }
 };
 
 // exports.uploadImage = upload.single('image');

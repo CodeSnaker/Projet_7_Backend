@@ -17,6 +17,6 @@ router.delete('/:id', auth, multer, bookController.deleteBook);
 
 // router.put("/:id", auth, multer.uploadImage, multer.compressAndSaveImage, );
 
-// router.post("/:id/rating", auth, multer.uploadImage, multer.compressAndSaveImage,  )
+router.post('/:id/rating', auth, bookController.reviewBook);
 
 module.exports = router;

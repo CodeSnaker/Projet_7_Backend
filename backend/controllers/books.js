@@ -26,7 +26,9 @@ exports.postBook = async (req, res) => {
     console.log(book.imageUrl);
 
     book.save()
-        .then(() => res.status(201).json({ message: 'Book has been created' }))
+        .then(() => {
+            res.status(201).json({ message: 'Book has been created' });
+        })
         .catch((error) =>
             res.status(500).json({ message: 'Something went wrong' })
         );
@@ -91,4 +93,45 @@ exports.updateBook = async (req, res) => {
     }
 
     const fileName = book.imageUrl.split('/').pop();
+};
+
+exports.reviewBook = async (req, res) => {
+    if (0 <= req.body.rating <= 5) {
+        const objBook = [{ ...req.body }];
+        Book.findOne({ _id: req.params.id })
+            .then((book) => {
+                const usersIdArray = book.ratings.map(
+                    (rating) => rating.userId
+                );
+                if (usersIdArray.includes(req.auth.userId)) {
+                    res.status(403).json({
+                        message: 'already reviewed by this user',
+                    });
+                } else {
+                    objBook.push({
+                        userId: req.auth.userId,
+                        rating: req.body.rating,
+                    });
+
+                    console.log(objBook);
+
+                    let sum = 0;
+                    for (let rating of book.ratings) {
+                        console.log(rating.grade);
+                        sum += rating.grade;
+                    }
+                    book.averageRating = sum / book.ratings.length;
+                    console.log(sum);
+
+                    // console.log(book.averageRating);
+                }
+            })
+            .catch((err) => {
+                res.status(400).json({
+                    message: 'book does not exist',
+                });
+            });
+    } else {
+        return res.status(400).json({ message: 'rating value is incorrect' });
+    }
 };
