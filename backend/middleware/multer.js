@@ -42,8 +42,6 @@ module.exports.optimizeImage = async (req, res, next) => {
         .toFile(outputFile)
         .then(() => {
             fs.unlink(pathOldFile, (err) => {
-                console.log(err);
-
                 if (!err) {
                     req.file.path =
                         req.protocol +

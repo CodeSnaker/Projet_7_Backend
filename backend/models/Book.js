@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const bookSchema = mongoose.Schema(
     {
@@ -11,12 +11,12 @@ const bookSchema = mongoose.Schema(
         ratings: [
             {
                 userId: String,
-                grade: Number,
+                grade: { type: Number, min: 0, max: 5 },
             },
         ],
         averageRating: Number,
     },
-    { collection: "books" }
+    { collection: 'books' }
 );
 
-module.exports = mongoose.model("Book", bookSchema);
+module.exports = mongoose.model('Book', bookSchema);

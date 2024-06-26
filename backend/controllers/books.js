@@ -17,8 +17,6 @@ exports.postBook = async (req, res) => {
         imageUrl: req.file.path,
     });
 
-    console.log(book.imageUrl);
-
     book.save()
         .then(() => {
             res.status(201).json({ message: 'Book has been created' });
@@ -68,7 +66,10 @@ exports.deleteBook = async (req, res) => {
     const fileName = book.imageUrl.split('/').pop();
 
     fs.unlink('./images/' + fileName, (err) => {
-        if (err) return res.status(500).json({ err });
+        if (err)
+            return res
+                .status(500)
+                .json({ message: "Couldn't delete image file" });
 
         Book.deleteOne({ _id: req.params.id })
             .then(() =>
@@ -76,11 +77,21 @@ exports.deleteBook = async (req, res) => {
                     .status(200)
                     .json({ message: 'book was successfully deleted' })
             )
-            .catch((err) => res.status(400).json({ err }));
+            .catch((err) =>
+                res.status(400).json({ message: "Couldn't delete the book" })
+            );
     });
 };
 
 exports.updateBook = async (req, res) => {
+    const newBook = req.file
+        ? {
+              ...JSON.parse(req.body.book),
+              imageUrl: req.file.path,
+          }
+        : { ...req.body };
+    delete newBook.userId;
+
     Book.findOne({ _id: req.params.id })
         .then((book) => {
             if (req.auth.userId !== book.userId) {
@@ -88,18 +99,38 @@ exports.updateBook = async (req, res) => {
                     message: 'This user is not authorized to modify this book',
                 });
             } else {
-                console.log(req.body);
-                if (req.body.hasOwnProperty('book')) {
-                    // parse JSON, replace image, update book
-                    console.log('AYO');
-                } else {
-                    console.log("AYEN'T");
+                if (req.file) {
+                    fs.unlink(
+                        'images/' + book.imageUrl.split('/').pop(),
+                        (err) => {
+                            if (err) {
+                                res.status(500).json({
+                                    message: "Couldn't delete image file",
+                                });
+                            }
+                        }
+                    );
                 }
+
+                Book.updateOne(
+                    { _id: req.params.id },
+                    { ...newBook, _id: req.params.id }
+                )
+                    .then(() => {
+                        res.status(200).json({
+                            message: 'Book was successfully modified',
+                        });
+                    })
+                    .catch((err) => {
+                        res.status(400).json({
+                            err,
+                        });
+                    });
             }
         })
-        .catch((err) =>
-            res.status(404).json({ message: 'book was not found' })
-        );
+        .catch((err) => {
+            res.status(404).json({ err });
+        });
 };
 
 exports.reviewBook = async (req, res) => {
