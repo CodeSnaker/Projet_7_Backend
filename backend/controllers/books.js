@@ -14,13 +14,7 @@ exports.postBook = async (req, res) => {
     const book = new Book({
         ...inputBook,
         userId: req.auth.userId,
-        imageUrl:
-            req.protocol +
-            '://' +
-            req.get('host') +
-            '/images/' +
-            'optimized_' +
-            req.file.filename,
+        imageUrl: req.file.path,
     });
 
     console.log(book.imageUrl);
@@ -37,13 +31,17 @@ exports.postBook = async (req, res) => {
 exports.getBooks = async (req, res) => {
     await Book.find()
         .then((books) => res.status(200).json(books))
-        .catch((err) => res.status(404).json({ message: 'Books not found' }));
+        .catch((err) =>
+            res.status(404).json({ message: 'Books was not found' })
+        );
 };
 
 exports.getBook = async (req, res) => {
     await Book.findOne({ _id: req.params.id })
         .then((book) => res.status(200).json(book))
-        .catch((err) => res.status(404).json({ message: 'Book not found' }));
+        .catch((err) =>
+            res.status(404).json({ message: 'Book was not found' })
+        );
 };
 
 exports.getBestRated = async (req, res) => {
@@ -51,14 +49,16 @@ exports.getBestRated = async (req, res) => {
         .limit(3)
         .sort({ averageRating: -1 })
         .then((books) => res.status(200).json(books))
-        .catch((err) => res.status(404).json({ message: 'Books not found' }));
+        .catch((err) =>
+            res.status(404).json({ message: 'Books were not found' })
+        );
 };
 
 exports.deleteBook = async (req, res) => {
     const book = await Book.findById(req.params.id);
 
     if (!book) {
-        return res.status(400).json({ message: 'book does not exist' });
+        return res.status(404).json({ message: 'Book was not found' });
     } else if (req.auth.userId !== book.userId) {
         return res.status(403).json({
             message: 'This user is not authorized to delete this book',
@@ -71,33 +71,39 @@ exports.deleteBook = async (req, res) => {
         if (err) return res.status(500).json({ err });
 
         Book.deleteOne({ _id: req.params.id })
-            .then(() => res.status(200).json({ message: 'book was deleted' }))
+            .then(() =>
+                res
+                    .status(200)
+                    .json({ message: 'book was successfully deleted' })
+            )
             .catch((err) => res.status(400).json({ err }));
     });
 };
 
 exports.updateBook = async (req, res) => {
-    let book = await Book.findById(req.params.id);
-
-    if (!book) {
-        return res.status(400).json({ message: 'book does not exist' });
-    } else if (req.auth.userId !== book.userId) {
-        return res.status(403).json({
-            message: 'This user is not authorized to modify this book',
-        });
-    }
-
-    if (req.body.hasOwnProperty('book')) {
-        // parse JSON, replace image, update book
-        console.log('AYO');
-    }
-
-    const fileName = book.imageUrl.split('/').pop();
+    Book.findOne({ _id: req.params.id })
+        .then((book) => {
+            if (req.auth.userId !== book.userId) {
+                res.status(403).json({
+                    message: 'This user is not authorized to modify this book',
+                });
+            } else {
+                console.log(req.body);
+                if (req.body.hasOwnProperty('book')) {
+                    // parse JSON, replace image, update book
+                    console.log('AYO');
+                } else {
+                    console.log("AYEN'T");
+                }
+            }
+        })
+        .catch((err) =>
+            res.status(404).json({ message: 'book was not found' })
+        );
 };
 
 exports.reviewBook = async (req, res) => {
     if (0 <= req.body.rating <= 5) {
-        const objBook = [{ ...req.body }];
         Book.findOne({ _id: req.params.id })
             .then((book) => {
                 const usersIdArray = book.ratings.map(
@@ -108,27 +114,33 @@ exports.reviewBook = async (req, res) => {
                         message: 'already reviewed by this user',
                     });
                 } else {
-                    objBook.push({
+                    const ratingsArray = book.ratings;
+                    ratingsArray.push({
                         userId: req.auth.userId,
-                        rating: req.body.rating,
+                        grade: req.body.rating,
                     });
 
-                    console.log(objBook);
-
                     let sum = 0;
-                    for (let rating of book.ratings) {
-                        console.log(rating.grade);
+                    for (let rating of ratingsArray) {
                         sum += rating.grade;
                     }
-                    book.averageRating = sum / book.ratings.length;
-                    console.log(sum);
+                    const averageRating = sum / ratingsArray.length;
 
-                    // console.log(book.averageRating);
+                    book.ratings = ratingsArray;
+                    book.averageRating = averageRating;
+
+                    book.save()
+                        .then(() => res.status(200).json(book))
+                        .catch((err) =>
+                            res.status(500).json({
+                                message: "Book didn't get updated",
+                            })
+                        );
                 }
             })
             .catch((err) => {
-                res.status(400).json({
-                    message: 'book does not exist',
+                res.status(404).json({
+                    message: 'book was not found',
                 });
             });
     } else {

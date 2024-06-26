@@ -15,7 +15,7 @@ router.post('/', auth, multer, multer.optimizeImage, bookController.postBook);
 
 router.delete('/:id', auth, multer, bookController.deleteBook);
 
-// router.put("/:id", auth, multer.uploadImage, multer.compressAndSaveImage, );
+router.put('/:id', auth, multer, bookController.updateBook);
 
 router.post('/:id/rating', auth, bookController.reviewBook);
 

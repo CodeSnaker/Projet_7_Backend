@@ -30,10 +30,8 @@ module.exports.optimizeImage = async (req, res, next) => {
     const filePath = req.file.path;
     const fileName = req.file.filename;
     const pathOldFile = './images/' + fileName;
-    console.log(pathOldFile);
 
-    const outputFile = path.join('images', 'optimized_' + fileName);
-    console.log(outputFile);
+    const outputFile = path.posix.join('images', 'optimized_' + fileName);
     let isResized = false;
     sharp.cache(false);
     await sharp(filePath)
@@ -47,7 +45,12 @@ module.exports.optimizeImage = async (req, res, next) => {
                 console.log(err);
 
                 if (!err) {
-                    req.file.path = outputFile;
+                    req.file.path =
+                        req.protocol +
+                        '://' +
+                        req.get('host') +
+                        '/' +
+                        outputFile;
                     next();
                 } else {
                     return res.status(500).json({ err });
@@ -55,46 +58,3 @@ module.exports.optimizeImage = async (req, res, next) => {
             });
         });
 };
-
-// exports.uploadImage = upload.single('image');
-
-// exports.compressAndSaveImage = async (req, res, next) => {
-//     if (!req.file) return next();
-
-//     const imageDir = 'images/';
-
-//     fs.access(imageDir, (err) => {
-//         if (err) fs.mkdirSync(imageDir);
-//     });
-//     const { buffer, originalName } = req.file;
-//     console.log('Original Name: ' + originalName);
-
-//     const timeStamp = Date.now();
-//     const fileName = `${timeStamp}-${originalName}.webp`;
-//     console.log('filename: ' + fileName);
-
-//     await sharp(buffer)
-//         .webp({ res: 20 })
-//         .toFile(imageDir + fileName);
-
-//     req.multer = {
-//         imageUrl: imageDir + fileName,
-//     };
-//     // try {
-//     //     const { buffer, originalName } = req.file;
-//     //     const timeStamp = new Date().toISOString();
-//     //     const fileName = `${timeStamp}-${originalName}.webp`;
-
-//     //     await sharp(buffer)
-//     //         .webp({ quality: 20 })
-//     //         .toFile(imageDir + fileName);
-
-//     //     req.multer = {
-//     //         imageUrl: imageDir + fileName,
-//     //     };
-//     // } catch (err) {
-//     //     res.status(500).json({ error });
-//     // }
-
-//     next();
-// };
